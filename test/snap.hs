@@ -15,7 +15,7 @@ import           Data.Maybe
 import           Network.HTTP.Conduit (responseBody)
 import           Network.HTTP.Types (renderSimpleQuery)
 import           Prelude hiding ((.))
-import           Snap hiding (Config)
+import           Snap
 import qualified Data.Configurator as CF
 import qualified Data.Configurator.Types as CF
 import           Snap.Core
@@ -65,16 +65,15 @@ decodedParam p = fromMaybe "" <$> getParam p
 ------------------------------------------------------------------------------
 
 
-testHandler :: Handler App App ()
-testHandler = do
-    (I18NMessage messages) <- getI18NMessages
-    msg <- liftIO $ (CF.lookup messages "hello" :: IO (Maybe String) )
-    liftIO $ print msg
-    writeBS "test"
+testSplice :: Splice AppHandler
+testSplice = do
+    locale <- liftIO $ getDefaultLocale
+    liftIO $ print locale
+    textSplice $ T.pack "test"
 
 index :: AppHandler ()
 index = do
-     render "index"
+     heistLocal (bindSplice "testSplice" testSplice) $ render "index"
 
 -- | wrap to element span
 --       
@@ -84,7 +83,6 @@ index = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes  = [ ("/", index)
-          , ("/test", testHandler)
           , ("", with heist heistServe)
           ]
 
@@ -92,10 +90,14 @@ routes  = [ ("/", index)
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "templates"
-    i <- nestSnaplet "i18n" i18n $ initI18NSnaplet (Just "zh_CN") Nothing
+    locale <- liftIO $ getDefaultLocale
+    i <- nestSnaplet "i18n" i18n $ initI18NSnaplet locale Nothing
     addRoutes routes
     return $ App h i
 
+getDefaultLocale :: IO (Maybe String)
+--getDefaultLocale = return $ Just "zh_CN"
+getDefaultLocale = liftM getLocale getConf
 
 ------------------------------------------------------------------------------
 

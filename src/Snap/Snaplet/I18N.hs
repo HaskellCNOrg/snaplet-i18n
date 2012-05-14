@@ -28,6 +28,12 @@ import Snap.Snaplet.Heist
 type Locale      = String
 type MessageFile = String
 
+defaultLocale :: Locale
+defaultLocale = "en_US"
+
+defaultMessageFilePrefix :: MessageFile
+defaultMessageFilePrefix = "data/message"
+
 data I18NConfig  = I18NConfig { _getLocale      :: Locale       -- ^ locale, default "en"
                               , _getMessageFile :: MessageFile  -- ^ message file name, default to "message"
                               } deriving (Show)
@@ -69,11 +75,12 @@ defaultI18NSnaplet = initI18NSnaplet Nothing Nothing
 
 -- | Init this I18NSnaplet snaplet.
 -- 
-initI18NSnaplet :: (HasHeist b, HasI18N b) => Maybe Locale -> Maybe MessageFile -> SnapletInit b I18NSnaplet
+initI18NSnaplet :: (HasHeist b, HasI18N b)
+                => Maybe Locale              -- ^ Locale, default to @defaultLocale@
+                -> Maybe MessageFile         -- ^ Message file prefix, default to @defaultMessageFilePrefix@
+                -> SnapletInit b I18NSnaplet
 initI18NSnaplet l m = makeSnaplet "I18NSnaplet" "" Nothing $ do
-    --mainConfig <- getSnapletUserConfig
-    --liftIO $ print $ show mainConfig
-    i18nConfig <- return $ I18NConfig (fromMaybe "en" l) (fromMaybe "data/message" m)
+    i18nConfig <- return $ I18NConfig (fromMaybe defaultLocale l) (fromMaybe defaultMessageFilePrefix m)
     config <- liftIO $ readMessageFile i18nConfig
     defaultSplices
     return $ I18NSnaplet i18nConfig $ I18NMessage config
@@ -91,17 +98,28 @@ readMessageFile config = do
     base     <- getCurrentDirectory
     fullname <- return $ base </> (file config)
     Config.load [Config.Required fullname]
-  where file c = _getMessageFile c ++ "-" ++ _getLocale c ++ ".cfg"
+  where 
+    -- file fullname will be like message-en_US.cfg
+    file c = _getMessageFile c ++ "-" ++ _getLocale c ++ ".cfg"
 
 
 -------------------------------------------------------
 
+-- | Splice name used in Heist template.
+--   e.g. <i18n name="hello" />
+-- 
 i18nSpliceName :: T.Text
 i18nSpliceName = "i18n"
 
+-- | Output as `span` HTML element for i18n message.
+--   e.g. <span>Shanghai</span>
+-- 
 i18nSpliceElement :: T.Text
 i18nSpliceElement = "span"
 
+-- | element attribute used for looking up i18n value.
+--   e.g. <i18n name="hello" />
+-- 
 i18nSpliceAttr :: T.Text
 i18nSpliceAttr = "name"
 

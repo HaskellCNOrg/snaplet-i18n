@@ -12,6 +12,8 @@
 
 <h2>Test I18N</h2>
 
+<testSplice />
+
 <p>
 <i18n name="shanghai"></i18n>
 <i18n name="hello"></i18n>
