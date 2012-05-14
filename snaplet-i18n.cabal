@@ -2,7 +2,7 @@
 -- options, see
 -- http://www.haskell.org/cabal/release/cabal-latest/doc/users-guide/authors.html#pkg-descr.
 -- The name of the package.
-Name:                snaplet-i10n
+Name:                snaplet-i18n
 Version:             0.0.1
 Description:         A light weight i18n snaplet.
 Synopsis:            snaplet-i18n
