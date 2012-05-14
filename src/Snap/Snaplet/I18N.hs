@@ -1,18 +1,20 @@
 {-# LANGUAGE OverloadedStrings, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+
 
 module Snap.Snaplet.I18N where
 
 import           Control.Monad
 import           Data.Lens.Common
 import           Data.Maybe
-import qualified Data.Text as T
 import           System.Directory
 import           System.FilePath.Posix
-import qualified Data.Configurator as Config
-import qualified Data.Configurator.Types as Config
-import qualified Text.XmlHtml as X
 import           Text.Templating.Heist
 import           Text.XmlHtml hiding (render)
+import qualified Data.Configurator as Config
+import qualified Data.Configurator.Types as Config
+import qualified Data.Text as T
+import qualified Text.XmlHtml as X
 
 import Snap
 import Snap.Snaplet.Heist
@@ -23,7 +25,7 @@ import Snap.Snaplet.Heist
 -- 
 -------------------------------------------------------
 
-type Locale = String
+type Locale      = String
 type MessageFile = String
 
 data I18NConfig  = I18NConfig { _getLocale      :: Locale       -- ^ locale, default "en"
@@ -41,10 +43,14 @@ data I18NSnaplet = I18NSnaplet
                     , _getI18NMessage :: I18NMessage
                     } 
 
-                
+
+-- | Compose App with a I18N Snaplet.
+-- 
 class HasI18N b where
   i18nLens :: Lens b (Snaplet I18NSnaplet)
   
+-- | Util functions
+-- 
 i18nLens' :: HasI18N b => Lens (Snaplet b) (Snaplet I18NSnaplet)
 i18nLens' = subSnaplet i18nLens
 
@@ -66,6 +72,7 @@ defaultI18NSnaplet = initI18NSnaplet Nothing Nothing
 initI18NSnaplet :: (HasHeist b, HasI18N b) => Maybe Locale -> Maybe MessageFile -> SnapletInit b I18NSnaplet
 initI18NSnaplet l m = makeSnaplet "I18NSnaplet" "" Nothing $ do
     --mainConfig <- getSnapletUserConfig
+    --liftIO $ print $ show mainConfig
     i18nConfig <- return $ I18NConfig (fromMaybe "en" l) (fromMaybe "data/message" m)
     config <- liftIO $ readMessageFile i18nConfig
     defaultSplices
@@ -73,19 +80,19 @@ initI18NSnaplet l m = makeSnaplet "I18NSnaplet" "" Nothing $ do
   where defaultSplices = addSplices [(i18nSpliceName, liftHeist i18nSplice)]
 
 -------------------------------------------------------
--- Load file
-    
+-- 
+
+-- | Load file
+--   server will not be able to start up if dir doesnt exists.
+--   Thus, no additional validation check so far.
+-- 
 readMessageFile :: I18NConfig -> IO Config.Config
 readMessageFile config = do
     base     <- getCurrentDirectory
     fullname <- return $ base </> (file config)
-    print fullname
     Config.load [Config.Required fullname]
-  where file c = _getMessageFile c ++ "_" ++ _getLocale c ++ ".cfg"
+  where file c = _getMessageFile c ++ "-" ++ _getLocale c ++ ".cfg"
 
-
-lookupText :: Config.Config -> Config.Name -> IO (Maybe T.Text)
-lookupText = Config.lookup
 
 -------------------------------------------------------
 
@@ -105,9 +112,10 @@ i18nSplice = do
     input <- getParamNode
     (I18NMessage messages) <- lift getI18NMessages
     value <- liftIO $ getValue messages input
+    -- FIXME: Turns out that it is not possible to fail at compilation if value is Nothing but runtime.
     return [X.Element i18nSpliceElement [] [X.TextNode $ T.pack value]]
     where getValue :: Config.Config -> Node -> IO String
-          getValue m i = Config.lookupDefault "Cannot find i18n message" m (getAttr' i)
+          getValue m i = Config.lookupDefault "Error: no value found." m (getAttr' i)
           getAttr' i = case getAttribute i18nSpliceAttr i of
             Just x -> x
             _      -> ""

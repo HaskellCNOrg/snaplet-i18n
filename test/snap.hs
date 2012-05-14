@@ -92,7 +92,7 @@ routes  = [ ("/", index)
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "templates"
-    i <- nestSnaplet "i18n" i18n $ defaultI18NSnaplet
+    i <- nestSnaplet "i18n" i18n $ initI18NSnaplet (Just "zh_CN") Nothing
     addRoutes routes
     return $ App h i
 
