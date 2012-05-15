@@ -2,7 +2,11 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 
-module Snap.Snaplet.I18N where
+module Snap.Snaplet.I18N 
+  ( I18NSnaplet
+  , HasI18N (..)
+  , initI18NSnaplet
+  ) where
 
 import           Control.Monad
 import           Data.Lens.Common
@@ -57,9 +61,6 @@ class HasI18N b where
   
 -- | Util functions
 -- 
-i18nLens' :: HasI18N b => Lens (Snaplet b) (Snaplet I18NSnaplet)
-i18nLens' = subSnaplet i18nLens
-
 getI18NSnaplet :: HasI18N b => Handler b b I18NSnaplet
 getI18NSnaplet = with i18nLens Snap.get
 
@@ -67,11 +68,6 @@ getI18NMessages :: HasI18N b => Handler b b I18NMessage
 getI18NMessages = liftM _getI18NMessage getI18NSnaplet
 
 -------------------------------------------------------
-
--- | Default I18N snaplet
--- 
-defaultI18NSnaplet :: (HasHeist b, HasI18N b) => SnapletInit b I18NSnaplet
-defaultI18NSnaplet = initI18NSnaplet Nothing Nothing
 
 -- | Init this I18NSnaplet snaplet.
 -- 
@@ -84,7 +80,8 @@ initI18NSnaplet l m = makeSnaplet "I18NSnaplet" "" Nothing $ do
     config <- liftIO $ readMessageFile i18nConfig
     defaultSplices
     return $ I18NSnaplet i18nConfig $ I18NMessage config
-  where defaultSplices = addSplices [(i18nSpliceName, liftHeist i18nSplice)]
+  where defaultSplices = addSplices [ ("i18n", liftHeist i18nSplice)
+                                    , ("i18nSpan", liftHeist i18nSpanSplice)]
 
 -------------------------------------------------------
 -- 
@@ -105,17 +102,24 @@ readMessageFile config = do
 
 -------------------------------------------------------
 
--- | Splice name used in Heist template.
---   e.g. <i18n name="hello" />
--- 
-i18nSpliceName :: T.Text
-i18nSpliceName = "i18n"
+-- | Splices just wrap value fonud at l10n message.
+--
+-- FIXME: Turns out that it is not possible to fail at compilation if value is Nothing but runtime. 
+i18nSplice :: HasI18N b => Splice (Handler b b)
+i18nSplice = do
+    input <- getParamNode
+    (I18NMessage messages) <- lift getI18NMessages
+    value <- liftIO $ lookupI18NValue messages input
+    return [X.TextNode $ T.pack value]
 
--- | Output as `span` HTML element for i18n message.
---   e.g. <span>Shanghai</span>
+-- | Splices. use 'span' html element wrap result.
 -- 
-i18nSpliceElement :: T.Text
-i18nSpliceElement = "span"
+i18nSpanSplice :: HasI18N b => Splice (Handler b b)
+i18nSpanSplice = do
+    input <- getParamNode
+    (I18NMessage messages) <- lift getI18NMessages
+    value <- liftIO $ lookupI18NValue messages input
+    return [X.Element "span" (elementAttrs input) [X.TextNode $ T.pack value]]
 
 -- | element attribute used for looking up i18n value.
 --   e.g. <i18n name="hello" />
@@ -123,17 +127,10 @@ i18nSpliceElement = "span"
 i18nSpliceAttr :: T.Text
 i18nSpliceAttr = "name"
 
--- | Splices
+-- | Look up messages and give a default value if not found.
 -- 
-i18nSplice :: HasI18N b => Splice (Handler b b)
-i18nSplice = do
-    input <- getParamNode
-    (I18NMessage messages) <- lift getI18NMessages
-    value <- liftIO $ getValue messages input
-    -- FIXME: Turns out that it is not possible to fail at compilation if value is Nothing but runtime.
-    return [X.Element i18nSpliceElement [] [X.TextNode $ T.pack value]]
-    where getValue :: Config.Config -> Node -> IO String
-          getValue m i = Config.lookupDefault "Error: no value found." m (getAttr' i)
-          getAttr' i = case getAttribute i18nSpliceAttr i of
-            Just x -> x
-            _      -> ""
+lookupI18NValue :: Config.Config -> Node -> IO String
+lookupI18NValue m input = Config.lookupDefault "Error: no value found." m (getAttr' input)
+                      where getAttr' i = case getAttribute i18nSpliceAttr i of
+                                          Just x -> x
+                                          _      -> "" 
