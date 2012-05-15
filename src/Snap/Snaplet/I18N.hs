@@ -6,6 +6,9 @@ module Snap.Snaplet.I18N
   ( I18NSnaplet
   , HasI18N (..)
   , initI18NSnaplet
+  , getI18NMessages
+  , I18NMessage (..)
+  , lookupI18NValue
   ) where
 
 import           Control.Monad
@@ -35,6 +38,8 @@ type MessageFile = String
 defaultLocale :: Locale
 defaultLocale = "en_US"
 
+-- | ?? could be multiple message files
+-- 
 defaultMessageFilePrefix :: MessageFile
 defaultMessageFilePrefix = "data/message"
 
@@ -97,6 +102,7 @@ readMessageFile config = do
     Config.load [Config.Required fullname]
   where 
     -- file fullname will be like message-en_US.cfg
+    -- FIXME: Maybe replace "-" with "_" in locale for typo
     file c = _getMessageFile c ++ "-" ++ _getLocale c ++ ".cfg"
 
 
@@ -109,8 +115,8 @@ i18nSplice :: HasI18N b => Splice (Handler b b)
 i18nSplice = do
     input <- getParamNode
     (I18NMessage messages) <- lift getI18NMessages
-    value <- liftIO $ lookupI18NValue messages input
-    return [X.TextNode $ T.pack value]
+    value <- liftIO $ lookupI18NValue' messages input
+    return [X.TextNode value]
 
 -- | Splices. use 'span' html element wrap result.
 -- 
@@ -118,8 +124,8 @@ i18nSpanSplice :: HasI18N b => Splice (Handler b b)
 i18nSpanSplice = do
     input <- getParamNode
     (I18NMessage messages) <- lift getI18NMessages
-    value <- liftIO $ lookupI18NValue messages input
-    return [X.Element "span" (elementAttrs input) [X.TextNode $ T.pack value]]
+    value <- liftIO $ lookupI18NValue' messages input
+    return [X.Element "span" (elementAttrs input) [X.TextNode value]]
 
 -- | element attribute used for looking up i18n value.
 --   e.g. <i18n name="hello" />
@@ -129,8 +135,10 @@ i18nSpliceAttr = "name"
 
 -- | Look up messages and give a default value if not found.
 -- 
-lookupI18NValue :: Config.Config -> Node -> IO String
-lookupI18NValue m input = Config.lookupDefault "Error: no value found." m (getAttr' input)
+lookupI18NValue' :: Config.Config -> Node -> IO T.Text
+lookupI18NValue' m input = Config.lookupDefault "Error: no value found." m (getAttr' input)
                       where getAttr' i = case getAttribute i18nSpliceAttr i of
                                           Just x -> x
                                           _      -> "" 
+lookupI18NValue :: Config.Config -> T.Text -> IO T.Text
+lookupI18NValue = Config.lookupDefault "Error: no value found."
