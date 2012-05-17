@@ -5,9 +5,9 @@
 module Snap.Snaplet.I18N 
   ( I18NSnaplet
   , HasI18N (..)
+  , I18NMessage (..)
   , initI18NSnaplet
   , getI18NMessages
-  , I18NMessage (..)
   , lookupI18NValue
   ) where
 
@@ -69,8 +69,17 @@ class HasI18N b where
 getI18NSnaplet :: HasI18N b => Handler b b I18NSnaplet
 getI18NSnaplet = with i18nLens Snap.get
 
+-- | Get the @I18NMessage@
+-- 
 getI18NMessages :: HasI18N b => Handler b b I18NMessage
 getI18NMessages = liftM _getI18NMessage getI18NSnaplet
+
+-- | Look up a value in, usuallly Handler Monad
+-- 
+lookupI18NValue :: HasI18N b => T.Text -> Handler b b T.Text
+lookupI18NValue key = do
+                      (I18NMessage msg) <- getI18NMessages
+                      liftIO $ Config.lookupDefault "Error: no value found." msg key
 
 -------------------------------------------------------
 
@@ -78,15 +87,14 @@ getI18NMessages = liftM _getI18NMessage getI18NSnaplet
 -- 
 initI18NSnaplet :: (HasHeist b, HasI18N b)
                 => Maybe Locale              -- ^ Locale, default to @defaultLocale@
-                -> Maybe MessageFile         -- ^ Message file prefix, default to @defaultMessageFilePrefix@
                 -> SnapletInit b I18NSnaplet
-initI18NSnaplet l m = makeSnaplet "I18NSnaplet" "" Nothing $ do
-    i18nConfig <- return $ I18NConfig (fromMaybe defaultLocale l) (fromMaybe defaultMessageFilePrefix m)
+initI18NSnaplet l = makeSnaplet "I18NSnaplet" "" Nothing $ do
+    i18nConfig <- return $ I18NConfig (fromMaybe defaultLocale l) defaultMessageFilePrefix
     config <- liftIO $ readMessageFile i18nConfig
-    defaultSplices
+    addDefaultSplices
     return $ I18NSnaplet i18nConfig $ I18NMessage config
-  where defaultSplices = addSplices [ ("i18n", liftHeist i18nSplice)
-                                    , ("i18nSpan", liftHeist i18nSpanSplice)]
+  where addDefaultSplices = addSplices [ ("i18n", liftHeist i18nSplice)
+                                       , ("i18nSpan", liftHeist i18nSpanSplice)]
 
 -------------------------------------------------------
 -- 
@@ -140,5 +148,3 @@ lookupI18NValue' m input = Config.lookupDefault "Error: no value found." m (getA
                       where getAttr' i = case getAttribute i18nSpliceAttr i of
                                           Just x -> x
                                           _      -> "" 
-lookupI18NValue :: Config.Config -> T.Text -> IO T.Text
-lookupI18NValue = Config.lookupDefault "Error: no value found."

@@ -91,7 +91,7 @@ app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "templates"
     locale <- liftIO $ getDefaultLocale
-    i <- nestSnaplet "i18n" i18n $ initI18NSnaplet (Just "zh_CN") Nothing
+    i <- nestSnaplet "i18n" i18n $ initI18NSnaplet (Just "zh_CN")
     addRoutes routes
     return $ App h i
 

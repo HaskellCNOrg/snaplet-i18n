@@ -3,10 +3,10 @@
 -- http://www.haskell.org/cabal/release/cabal-latest/doc/users-guide/authors.html#pkg-descr.
 -- The name of the package.
 Name:                snaplet-i18n
-Version:             0.0.1
+Version:             0.0.2
 Description:         A light weight i18n snaplet.
 Synopsis:            snaplet-i18n
-Homepage:            freizl.github.com
+Homepage:            https://github.com/HaskellCNOrg/snaplet-i18n
 License:             BSD3
 License-file:        LICENSE
 Author:              Haisheng,Wu
@@ -16,7 +16,6 @@ Category:            Web
 Build-type:          Simple
 Stability:           Experience
 Cabal-version:       >=1.6
-
 
 Extra-source-files:  
   README.md
