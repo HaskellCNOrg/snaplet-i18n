@@ -25,11 +25,8 @@ import qualified Text.XmlHtml as X
 
 import Snap
 import Snap.Snaplet.Heist
--------------------------------------------------------
--- 
---
--- 
--- 
+
+
 -------------------------------------------------------
 
 type Locale      = String
@@ -89,7 +86,7 @@ initI18NSnaplet :: (HasHeist b, HasI18N b)
                 => Maybe Locale              -- ^ Locale, default to @defaultLocale@
                 -> SnapletInit b I18NSnaplet
 initI18NSnaplet l = makeSnaplet "I18NSnaplet" "" Nothing $ do
-    i18nConfig <- return $ I18NConfig (fromMaybe defaultLocale l) defaultMessageFilePrefix
+    let i18nConfig = I18NConfig (fromMaybe defaultLocale l) defaultMessageFilePrefix
     config <- liftIO $ readMessageFile i18nConfig
     addDefaultSplices
     return $ I18NSnaplet i18nConfig $ I18NMessage config
@@ -106,7 +103,7 @@ initI18NSnaplet l = makeSnaplet "I18NSnaplet" "" Nothing $ do
 readMessageFile :: I18NConfig -> IO Config.Config
 readMessageFile config = do
     base     <- getCurrentDirectory
-    fullname <- return $ base </> (file config)
+    let fullname = base </> file config
     Config.load [Config.Required fullname]
   where 
     -- file fullname will be like message-en_US.cfg
@@ -122,8 +119,7 @@ readMessageFile config = do
 i18nSplice :: HasI18N b => Splice (Handler b b)
 i18nSplice = do
     input <- getParamNode
-    (I18NMessage messages) <- lift getI18NMessages
-    value <- liftIO $ lookupI18NValue' messages input
+    value <- lift . lookupI18NValue $ getNameAttr input
     return [X.TextNode value]
 
 -- | Splices. use 'span' html element wrap result.
@@ -131,8 +127,7 @@ i18nSplice = do
 i18nSpanSplice :: HasI18N b => Splice (Handler b b)
 i18nSpanSplice = do
     input <- getParamNode
-    (I18NMessage messages) <- lift getI18NMessages
-    value <- liftIO $ lookupI18NValue' messages input
+    value <- lift . lookupI18NValue $ getNameAttr input
     return [X.Element "span" (elementAttrs input) [X.TextNode value]]
 
 -- | element attribute used for looking up i18n value.
@@ -141,10 +136,9 @@ i18nSpanSplice = do
 i18nSpliceAttr :: T.Text
 i18nSpliceAttr = "name"
 
--- | Look up messages and give a default value if not found.
+-- | Look up 'name' attribute value.
 -- 
-lookupI18NValue' :: Config.Config -> Node -> IO T.Text
-lookupI18NValue' m input = Config.lookupDefault "Error: no value found." m (getAttr' input)
-                      where getAttr' i = case getAttribute i18nSpliceAttr i of
-                                          Just x -> x
-                                          _      -> "" 
+getNameAttr :: Node -> T.Text
+getNameAttr n = case getAttribute i18nSpliceAttr n of
+                  Just x -> x
+                  _      -> "" 
