@@ -1,3 +1,5 @@
+
+
 ## snaplet-i18n
 
 1. create config below into `data/message_en.cfg`
