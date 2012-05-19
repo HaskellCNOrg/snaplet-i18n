@@ -113,14 +113,26 @@ readMessageFile config = do
 
 -------------------------------------------------------
 
+
+-- | element attribute used for looking up i18n value.
+--   e.g. <i18n name="hello" />
+-- 
+i18nSpliceAttr :: T.Text
+i18nSpliceAttr = "name"
+
+
 -- | Splices just wrap value fonud at l10n message.
+--   When it is used for wrap around other elements, a.k.a children is not empty,
+--   binding `i18nValue`.
 --
 -- FIXME: Turns out that it is not possible to fail at compilation if value is Nothing but runtime. 
 i18nSplice :: HasI18N b => Splice (Handler b b)
 i18nSplice = do
     input <- getParamNode
     value <- lift . lookupI18NValue $ getNameAttr input
-    return [X.TextNode value]
+    case childElements input of
+      [] -> return [X.TextNode value]
+      _  -> runChildrenWithText [("i18nValue", value)]
 
 -- | Splices. use 'span' html element wrap result.
 -- 
@@ -129,12 +141,6 @@ i18nSpanSplice = do
     input <- getParamNode
     value <- lift . lookupI18NValue $ getNameAttr input
     return [X.Element "span" (elementAttrs input) [X.TextNode value]]
-
--- | element attribute used for looking up i18n value.
---   e.g. <i18n name="hello" />
--- 
-i18nSpliceAttr :: T.Text
-i18nSpliceAttr = "name"
 
 -- | Look up 'name' attribute value.
 -- 

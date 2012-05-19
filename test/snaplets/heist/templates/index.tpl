@@ -20,5 +20,11 @@
 <i18n name="invalidekey"></i18n>
 </p>
  
+ <p>
+    <i18n name="shanghai">
+        <input type="submit" value="${i18nValue}" />
+    </i18n>
+</p>
+
 </body>
 </html>
