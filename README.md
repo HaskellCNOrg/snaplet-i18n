@@ -23,3 +23,10 @@ shanghai = "ShangHai"
 - [what is snaplet]
 
 [what is snaplet]: http://snapframework.com/docs/tutorials/snaplets-tutorial
+
+## TODO
+
+- maybe multiple locale support at run time.
+- build failed at Hakcage
+    - because heist does not specify version of `transformers`, which will conflick with `transformer` of `mtl`
+    - Upgrade heist would be fine.
