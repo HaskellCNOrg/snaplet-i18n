@@ -124,6 +124,9 @@ i18nSpliceAttr = "name"
 -- | Splices just wrap value fonud at l10n message.
 --   When it is used for wrap around other elements, a.k.a children is not empty,
 --   binding `i18nValue`.
+--   e.g.
+--       <i18n name="hello" />
+--       <i18n name="hello"><p><i18nValue/></p></i18n>
 --
 -- FIXME: Turns out that it is not possible to fail at compilation if value is Nothing but runtime. 
 i18nSplice :: HasI18N b => Splice (Handler b b)

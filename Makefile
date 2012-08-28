@@ -1,8 +1,6 @@
 
-
-HC=ghc
-
 DIST=dist
+CBD=cabal-dev
 
 default: build
 
@@ -10,20 +8,20 @@ clean:
 	rm -rf $(DIST)
 
 conf:
-	cabal configure
+	$(CBD) configure
 
 build: conf
-	cabal build
+	$(CBD)  build
 	hlint src/
 
 rebuild: clean build
 
 install: build
-	cabal install
+	$(CBD)  install
 
 reinstall: clean install
-	cabal haddock
-	cabal sdist
+	$(CBD)  haddock
+	$(CBD)  sdist
 
 test-demo:
 	cd test/ && runghc snap.hs -b 127.0.0.1 -p 8888
