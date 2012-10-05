@@ -12,8 +12,6 @@ import           Control.Monad
 import           Control.Exception (SomeException, try)
 import           Data.ByteString (ByteString)
 import           Data.Maybe
-import           Network.HTTP.Conduit (responseBody)
-import           Network.HTTP.Types (renderSimpleQuery)
 import           Prelude hiding ((.))
 import           Snap
 import qualified Data.Configurator as CF
@@ -21,7 +19,7 @@ import qualified Data.Configurator.Types as CF
 import           Snap.Core
 import           Snap.Http.Server
 import           Snap.Snaplet.Heist
-import           Snap.Snaplet.OAuth
+import           Snap.Snaplet.Config
 import           Snap.Util.FileServe
 import           System.IO
 import qualified Data.ByteString.Char8 as BS
@@ -33,9 +31,9 @@ import           Text.Templating.Heist
 import           Text.XmlHtml hiding (render)
 
 #ifdef DEVELOPMENT
-import           Snap.Loader.Devel
+import           Snap.Loader.Dynamic
 #else
-import           Snap.Loader.Prod
+import           Snap.Loader.Static
 #endif
 
 import Snap.Snaplet.I18N
@@ -68,7 +66,7 @@ decodedParam p = fromMaybe "" <$> getParam p
 testSplice :: Splice AppHandler
 testSplice = do
     locale <- liftIO $ getDefaultLocale
-    liftIO $ print locale
+    --liftIO $ print locale
     textSplice $ T.pack "test"
 
 index :: AppHandler ()
@@ -110,12 +108,13 @@ main = do
     _ <- try $ httpServe conf $ site :: IO (Either SomeException ())
     cleanup
 
-getConf :: IO (Config Snap ())
-getConf = commandLineConfig defaultConfig
+getConf :: IO (Config Snap AppConfig)
+getConf = commandLineAppConfig defaultConfig
 
-getActions :: Config Snap () -> IO (Snap (), IO ())
-getActions _ = do
-    (msgs, site, cleanup) <- runSnaplet app
+getActions :: Config Snap AppConfig -> IO (Snap (), IO ())
+getActions conf = do
+    (msgs, site, cleanup) <- runSnaplet
+        (appEnvironment =<< getOther conf) app
     hPutStrLn stderr $ T.unpack msgs
     return (site, cleanup)
 

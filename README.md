@@ -3,20 +3,24 @@
 
 ## snaplet-i18n
 
-1. create config below into `data/message_en.cfg`
+  1. create config below into `data/message_en.cfg`
 
 ~~~
 hello = "Hello"
 shanghai = "ShangHai"
 ~~~
 
-2. use tag in heist template
+  2. use tag in heist template
 
 ~~~
 <i18n name="shanghai"></i18n>
+<i18nSpan name="shanghai"></i18n>
+<i18n name="shanghai">
+  <a><i18nValue /></a>
+</i18n>
 ~~~
 
-**see test at test/snap.hs***
+**see example at example dir**
 
 ## Snaplet
 

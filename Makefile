@@ -2,7 +2,7 @@
 DIST=dist
 CBD=cabal-dev
 
-default: build
+default: clean build rebuild
 
 clean:
 	rm -rf $(DIST)
@@ -23,6 +23,6 @@ reinstall: clean install
 	$(CBD)  haddock
 	$(CBD)  sdist
 
-test-demo:
-	cd test/ && runghc snap.hs -b 127.0.0.1 -p 8888
+demo:
+	cd example/ && runghc -package-conf=../cabal-dev/packages-7.4.1.conf snap.hs -b 127.0.0.1 -p 8888
 
