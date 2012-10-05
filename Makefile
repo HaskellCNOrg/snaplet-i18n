@@ -6,6 +6,10 @@ default: clean build rebuild
 
 clean:
 	rm -rf $(DIST)
+	rm -rf ./cabal-dev/lib/snaplet-i18n*
+	rm -rf ./cabal-dev/packages/snaplet-i18n*
+	rm -f ./cabal-dev/packages-7.4.1.conf/snaplet-i18n-*
+
 
 conf:
 	$(CBD) configure
