@@ -19,9 +19,9 @@ Cabal-version:       >=1.6
 
 Extra-source-files:  
   README.md
-  test/snap.hs
-  test/snaplets/heist/templates/*.tpl
-  test/data/*.cfg
+  example/snap.hs
+  example/snaplets/heist/templates/*.tpl
+  example/data/*.cfg
 
 Source-Repository head
   Type:     git
