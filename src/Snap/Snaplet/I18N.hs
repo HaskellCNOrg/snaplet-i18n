@@ -16,12 +16,12 @@ import qualified Data.Configurator.Types as Config
 import           Data.Lens.Common
 import           Data.Maybe
 import qualified Data.Text               as T
-import           System.Directory
 import           System.FilePath.Posix
 import           Text.Templating.Heist
 import           Text.XmlHtml            hiding (render)
 import qualified Text.XmlHtml            as X
 
+import Paths_snaplet_i18n
 import           Snap
 import           Snap.Snaplet.Heist
 
@@ -39,7 +39,7 @@ defaultLocale = "en_US"
 -- | ?? could be multiple message files
 --
 defaultMessageFilePrefix :: MessageFile
-defaultMessageFilePrefix = "data/message"
+defaultMessageFilePrefix = "message"
 
 data I18NConfig  = I18NConfig { _getLocale      :: Locale
                                 -- ^ locale, default "en"
@@ -90,13 +90,17 @@ lookupI18NValue key = do
 initI18NSnaplet :: (HasHeist b, HasI18N b)
                 => Maybe Locale              -- ^ Locale, default to @defaultLocale@
                 -> SnapletInit b I18NSnaplet
-initI18NSnaplet l = makeSnaplet "I18NSnaplet" "" Nothing $ do
+initI18NSnaplet l = makeSnaplet "i18n" description datadir $ do
     let i18nConfig = I18NConfig (fromMaybe defaultLocale l) defaultMessageFilePrefix
-    msg <- liftIO $ readMessageFile i18nConfig
+    fp <- getSnapletFilePath
+    msg <- liftIO $ readMessageFile fp i18nConfig
     addDefaultSplices
     return $ I18NSnaplet i18nConfig msg
   where addDefaultSplices = addSplices [ ("i18n", liftHeist i18nSplice)
                                        , ("i18nSpan", liftHeist i18nSpanSplice)]
+        -- config dir for snaplet
+        datadir = Just $ liftM (++ "/resources") getDataDir
+        description = "light weight i18n snaplet"
 
 -------------------------------------------------------
 --
@@ -105,10 +109,8 @@ initI18NSnaplet l = makeSnaplet "I18NSnaplet" "" Nothing $ do
 --   server will not be able to start up if dir doesnt exists.
 --   Thus, no additional validation check so far.
 --
-readMessageFile :: I18NConfig -> IO I18NMessage
-                   --IO Config.Config
-readMessageFile config = do
-    base <- getCurrentDirectory
+readMessageFile :: FilePath -> I18NConfig -> IO I18NMessage
+readMessageFile base config = do
     let fullname = base </> file config
     fmap I18NMessage (Config.load [Config.Required fullname])
   where
