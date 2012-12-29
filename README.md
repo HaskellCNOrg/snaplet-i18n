@@ -1,4 +1,3 @@
-
 [![Build Status](https://secure.travis-ci.org/HaskellCNOrg/snaplet-i18n.png?branch=master)](http://travis-ci.org/HaskellCNOrg/snaplet-i18n)
 
 ## snaplet-i18n
@@ -31,6 +30,5 @@ shanghai = "ShangHai"
 ## TODO
 
 - maybe multiple locale support at run time.
-- build failed at Hakcage
-    - because heist does not specify version of `transformers`, which will conflick with `transformer` of `mtl`
-    - Upgrade heist would be fine.
+- use getDataDir to retrieve locale msg. [snaplet tutorial](http://snapframework.com/docs/tutorials/snaplets-tutorial)
+  
