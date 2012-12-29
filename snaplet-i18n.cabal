@@ -21,7 +21,7 @@ Extra-source-files:
   README.md
   example/snap.hs
   example/snaplets/heist/templates/*.tpl
-  example/data/*.cfg
+  example/snaplets/i18n/*.cfg
 
 Source-Repository head
   Type:     git
