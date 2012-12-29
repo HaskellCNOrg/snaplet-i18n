@@ -25,7 +25,7 @@ Extra-source-files:
 
 Source-Repository head
   Type:     git
-  Location: https://github.com/HaskellCNOrg/snaplet-i18n
+  Location: git://github.com/HaskellCNOrg/snaplet-i18n.git
 
 
 Library
