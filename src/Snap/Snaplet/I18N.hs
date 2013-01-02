@@ -13,11 +13,13 @@ module Snap.Snaplet.I18N
 import           Control.Monad
 import qualified Data.Configurator       as Config
 import qualified Data.Configurator.Types as Config
-import           Data.Lens.Common
+--import           Control.Lens
 import           Data.Maybe
 import qualified Data.Text               as T
 import           System.FilePath.Posix
-import           Text.Templating.Heist
+import           Heist
+import qualified Heist.Interpreted as I
+--import qualified Heist.Compiled as C
 import           Text.XmlHtml            hiding (render)
 import qualified Text.XmlHtml            as X
 
@@ -62,7 +64,7 @@ data I18NSnaplet = I18NSnaplet
 -- | Compose App with a I18N Snaplet.
 --
 class HasI18N b where
-  i18nLens :: Lens b (Snaplet I18NSnaplet)
+  i18nLens :: SnapletLens b I18NSnaplet
 
 -- | Util functions
 --
@@ -96,9 +98,9 @@ initI18NSnaplet l = makeSnaplet "i18n" description datadir $ do
     msg <- liftIO $ readMessageFile fp i18nConfig
     addDefaultSplices
     return $ I18NSnaplet i18nConfig msg
-  where addDefaultSplices = addSplices [ ("i18n", liftHeist i18nSplice)
-                                       , ("i18nSpan", liftHeist i18nSpanSplice)]
-        -- config dir for snaplet
+  where addDefaultSplices = addSplices [ ("i18n", i18nSplice)
+                                       , ("i18nSpan", i18nSpanSplice)]
+        -- config dir for current snaplet
         datadir = Just $ liftM (++ "/resources") getDataDir
         description = "light weight i18n snaplet"
 
@@ -138,21 +140,21 @@ i18nSpliceAttr = "name"
 --       <i18n name="hello"><p><i18nValue/></p></i18n>
 --
 -- FIXME: Turns out that it is not possible to fail at compilation if value is Nothing but runtime.
-i18nSplice :: HasI18N b => Splice (Handler b b)
+i18nSplice :: HasI18N b => I.Splice (Handler b b)
 i18nSplice = do
     input <- getParamNode
     value <- lift . lookupI18NValue $ getNameAttr input
     case childElements input of
       [] -> return [X.TextNode value]
-      _  -> runChildrenWithText [("i18nValue", value)]
+      _  -> I.runChildrenWithText [("i18nValue", value)]
 
 -- | Splices. use 'span' html element wrap result.
 --
-i18nSpanSplice :: HasI18N b => Splice (Handler b b)
+i18nSpanSplice :: HasI18N b => SnapletISplice b -- (Handler b b)
 i18nSpanSplice = do
     input <- getParamNode
-    value <- lift . lookupI18NValue $ getNameAttr input
-    return [X.Element "span" (elementAttrs input) [X.TextNode value]]
+    v <- lift . lookupI18NValue $ getNameAttr input
+    return [X.Element "span" (elementAttrs input) [X.TextNode v]]
 
 -- | Look up 'name' attribute value.
 --

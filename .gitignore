@@ -2,4 +2,4 @@ dist
 *.o
 *.hi
 log
-cabal-dev
+cabal-dev*

@@ -27,7 +27,9 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Text.XmlHtml as X
-import           Text.Templating.Heist
+import Heist
+import qualified Heist.Interpreted as I
+import Control.Lens
 import           Text.XmlHtml hiding (render)
 
 #ifdef DEVELOPMENT
@@ -45,7 +47,7 @@ data App = App
     , _i18n   :: Snaplet I18NSnaplet
     }
 
-makeLens ''App
+makeLenses ''App
 
 instance HasHeist App where
     heistLens = subSnaplet heist
@@ -63,18 +65,18 @@ decodedParam p = fromMaybe "" <$> getParam p
 ------------------------------------------------------------------------------
 
 
-testSplice :: Splice AppHandler
+testSplice :: I.Splice AppHandler
 testSplice = do
     locale <- liftIO $ getDefaultLocale
     --liftIO $ print locale
-    textSplice $ T.pack "test"
+    I.textSplice $ T.pack "test"
 
 index :: AppHandler ()
 index = do
-     heistLocal (bindSplice "testSplice" testSplice) $ render "index"
+     heistLocal (I.bindSplice "testSplice" testSplice) $ render "index"
 
 -- | wrap to element span
---       
+--
 
 ------------------------------------------------------------------------------
 
@@ -117,4 +119,3 @@ getActions conf = do
         (appEnvironment =<< getOther conf) app
     hPutStrLn stderr $ T.unpack msgs
     return (site, cleanup)
-
