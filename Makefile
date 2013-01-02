@@ -17,6 +17,7 @@ conf:
 build: conf
 	$(CBD)  build
 	hlint src/
+	stylish-haskell -i src/Snap/Snaplet/*.hs
 
 rebuild: clean build
 
@@ -29,4 +30,3 @@ reinstall: clean install
 
 demo:
 	cd example/ && runghc -package-conf=../cabal-dev/packages-7.4.1.conf snap.hs -b 127.0.0.1 -p 8888
-

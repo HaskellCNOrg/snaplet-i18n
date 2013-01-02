@@ -2,10 +2,10 @@
 
 
 module Snap.Snaplet.I18N
-  ( I18NSnaplet
+  ( I18N
   , HasI18N (..)
   , I18NMessage (..)
-  , initI18NSnaplet
+  , initI18N
   , getI18NMessages
   , lookupI18NValue
   ) where
@@ -13,17 +13,15 @@ module Snap.Snaplet.I18N
 import           Control.Monad
 import qualified Data.Configurator       as Config
 import qualified Data.Configurator.Types as Config
---import           Control.Lens
 import           Data.Maybe
 import qualified Data.Text               as T
-import           System.FilePath.Posix
 import           Heist
-import qualified Heist.Interpreted as I
---import qualified Heist.Compiled as C
+import qualified Heist.Interpreted       as I
+import           System.FilePath.Posix
 import           Text.XmlHtml            hiding (render)
 import qualified Text.XmlHtml            as X
 
-import Paths_snaplet_i18n
+import           Paths_snaplet_i18n
 import           Snap
 import           Snap.Snaplet.Heist
 
@@ -55,57 +53,55 @@ newtype I18NMessage = I18NMessage Config.Config
 
 -- | data type
 --
-data I18NSnaplet = I18NSnaplet
-                    { _getI18NConfig  :: I18NConfig
-                    , _getI18NMessage :: I18NMessage
-                    }
-
+data I18N = I18N
+            { _getI18NConfig  :: I18NConfig
+            , _getI18NMessage :: I18NMessage
+            }
 
 -- | Compose App with a I18N Snaplet.
 --
 class HasI18N b where
-  i18nLens :: SnapletLens b I18NSnaplet
+   i18nLens :: SnapletLens b I18N
 
 -- | Util functions
 --
-getI18NSnaplet :: HasI18N b => Handler b b I18NSnaplet
-getI18NSnaplet = with i18nLens Snap.get
+getI18N :: HasI18N b => Handler b b I18N
+getI18N = with i18nLens Snap.get
 
 -- | Get the @I18NMessage@
 --
 getI18NMessages :: HasI18N b => Handler b b I18NMessage
-getI18NMessages = liftM _getI18NMessage getI18NSnaplet
+getI18NMessages = liftM _getI18NMessage getI18N
 
 -- | Look up a value in, usuallly Handler Monad
 --
 lookupI18NValue :: HasI18N b => T.Text -> Handler b b T.Text
 lookupI18NValue key = do
-                      (I18NMessage msg) <- getI18NMessages
-                      liftIO $ Config.lookupDefault "Error: no value found." msg key
+    (I18NMessage msg) <- getI18NMessages
+    liftIO $ Config.lookupDefault "Error: no value found." msg key
 
 ----------------------------------------------------------------------
 --    Init Snaplet
 ----------------------------------------------------------------------
 
--- | Init this I18NSnaplet snaplet.
+-- | Init this I18N snaplet.
 --
-initI18NSnaplet :: (HasHeist b, HasI18N b)
+initI18N :: (HasHeist b, HasI18N b)
                 => Maybe Locale              -- ^ Locale, default to @defaultLocale@
-                -> SnapletInit b I18NSnaplet
-initI18NSnaplet l = makeSnaplet "i18n" description datadir $ do
+                -> SnapletInit b I18N
+initI18N l = makeSnaplet "i18n" description datadir $ do
     let i18nConfig = I18NConfig (fromMaybe defaultLocale l) defaultMessageFilePrefix
     fp <- getSnapletFilePath
     msg <- liftIO $ readMessageFile fp i18nConfig
     addDefaultSplices
-    return $ I18NSnaplet i18nConfig msg
+    return $ I18N i18nConfig msg
   where addDefaultSplices = addSplices [ ("i18n", i18nSplice)
-                                       , ("i18nSpan", i18nSpanSplice)]
+                                       , ("i18nSpan", i18nSpanSplice)
+                                       ]
         -- config dir for current snaplet
         datadir = Just $ liftM (++ "/resources") getDataDir
         description = "light weight i18n snaplet"
 
--------------------------------------------------------
---
 
 -- | Load file
 --   server will not be able to start up if dir doesnt exists.
@@ -150,7 +146,7 @@ i18nSplice = do
 
 -- | Splices. use 'span' html element wrap result.
 --
-i18nSpanSplice :: HasI18N b => SnapletISplice b -- (Handler b b)
+i18nSpanSplice :: HasI18N b => I.Splice (Handler b b)
 i18nSpanSplice = do
     input <- getParamNode
     v <- lift . lookupI18NValue $ getNameAttr input

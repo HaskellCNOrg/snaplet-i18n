@@ -32,19 +32,16 @@ import qualified Heist.Interpreted as I
 import Control.Lens
 import           Text.XmlHtml hiding (render)
 
-#ifdef DEVELOPMENT
-import           Snap.Loader.Dynamic
-#else
-import           Snap.Loader.Static
-#endif
-
 import Snap.Snaplet.I18N
+
+import           Snap.Loader.Static
+
 
 ------------------------------------------------------------------------------
 
 data App = App
     { _heist   :: Snaplet (Heist App)
-    , _i18n   :: Snaplet I18NSnaplet
+    , _i18n   :: Snaplet I18N
     }
 
 makeLenses ''App
@@ -91,7 +88,7 @@ app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "templates"
     locale <- liftIO $ getDefaultLocale
-    i <- nestSnaplet "i18n" i18n $ initI18NSnaplet (Just "zh_CN")
+    i <- nestSnaplet "i18n" i18n $ initI18N (Just "zh_CN")
     addRoutes routes
     return $ App h i
 
