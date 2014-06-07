@@ -1,15 +1,16 @@
-
+SANDBOX=.cabal-sandbox
 DIST=dist
-CBD=cabal-dev
+CBD=cabal
+DEMO=$(SANDBOX)/bin/demo
 
 default: clean build rebuild
 
-clean:
-	rm -rf $(DIST)
-	rm -rf ./cabal-dev/lib/snaplet-i18n*
-	rm -rf ./cabal-dev/packages/snaplet-i18n*
-	rm -f ./cabal-dev/packages-7.4.1.conf/snaplet-i18n-*
+init:
+	test -e cabal.sandbox.config || cabal sandbox init
+	cabal install --only-dependencies --job=2
 
+clean:
+	$(CBD) clean
 
 conf:
 	$(CBD) configure
@@ -28,5 +29,5 @@ reinstall: clean install
 	$(CBD)  haddock
 	$(CBD)  sdist
 
-demo:
-	cd example/ && runghc -package-conf=../cabal-dev/packages-7.4.1.conf snap.hs -b 127.0.0.1 -p 8888
+demo: install
+	$(DEMO) -p 8811

@@ -3,7 +3,7 @@
 -- http://www.haskell.org/cabal/release/cabal-latest/doc/users-guide/authors.html#pkg-descr.
 -- The name of the package.
 Name:                snaplet-i18n
-Version:             0.0.4
+Version:             0.0.5
 Description:         A light weight i18n snaplet.
 Synopsis:            snaplet-i18n
 Homepage:            https://github.com/HaskellCNOrg/snaplet-i18n
@@ -15,7 +15,7 @@ Copyright:           Haisheng Wu
 Category:            Web
 Build-type:          Simple
 Stability:           Experience
-Cabal-version:       >=1.6
+Cabal-version:       >=1.10
 
 Extra-source-files:  
   README.md
@@ -30,6 +30,7 @@ Source-Repository head
 
 Library
   Hs-Source-Dirs:   src
+  default-language:    Haskell2010
   Exposed-modules:     
       Snap.Snaplet.I18N
 
@@ -39,11 +40,11 @@ Library
       base         >= 4       && < 5,
       configurator >= 0.2     && < 0.3,
       filepath     >= 1.2     && < 1.4,
-      heist        >= 0.10    && < 0.11,
+      heist        >= 0.10    && < 0.14,
       lens         >= 3.7.0.1 && < 3.8,
-      snap         >= 0.10    && < 0.11,
+      snap         >= 0.10    && < 0.14,
       snap-loader-static >= 0.9 && < 0.11,
-      text         >= 0.11    && < 0.12,
+      text         >= 0.11    && < 1.2,
       xmlhtml      >= 0.2
 
   if impl(ghc >= 6.12.0)
@@ -52,17 +53,28 @@ Library
   else
       ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
                    -fno-warn-orphans     
-    
-  -- Modules not exported by this package.
-  -- Other-modules:       
-  
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
-  
 
+Executable demo
+  Hs-Source-Dirs:   example
+  default-language:    Haskell2010
+  main-is: snap.hs
 
+  Build-Depends:    
+      base         >= 4       && < 5,
+      configurator >= 0.2     && < 0.3,
+      filepath     >= 1.2     && < 1.4,
+      heist        >= 0.10    && < 0.14,
+      lens         >= 3.7.0.1 && < 3.8,
+      snap         >= 0.10    && < 0.14,
+      snap-loader-static >= 0.9 && < 0.11,
+      text         >= 0.11    && < 1.2,
+      xmlhtml      >= 0.2,
 
+      bytestring   >= 0.9 && < 1.0,
+      snaplet-i18n
 
-
-
-
+  if impl(ghc >= 6.12.0)
+      ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
+                   -fno-warn-unused-do-bind
+  else
+      ghc-options: -Wall -fwarn-tabs -funbox-strict-fields

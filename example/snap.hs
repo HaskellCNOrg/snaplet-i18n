@@ -7,30 +7,18 @@
 module Main where
 
 ------------------------------------------------------------------------------
-import           Control.Category
 import           Control.Monad
 import           Control.Exception (SomeException, try)
 import           Data.ByteString (ByteString)
 import           Data.Maybe
 import           Prelude hiding ((.))
 import           Snap
-import qualified Data.Configurator as CF
-import qualified Data.Configurator.Types as CF
-import           Snap.Core
-import           Snap.Http.Server
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Config
-import           Snap.Util.FileServe
 import           System.IO
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import qualified Text.XmlHtml as X
-import Heist
 import qualified Heist.Interpreted as I
-import Control.Lens
-import           Text.XmlHtml hiding (render)
+import Control.Lens hiding (value)
 
 import Snap.Snaplet.I18N
 
@@ -65,7 +53,7 @@ decodedParam p = fromMaybe "" <$> getParam p
 testSplice :: I.Splice AppHandler
 testSplice = do
     locale <- liftIO $ getDefaultLocale
-    --liftIO $ print locale
+    liftIO $ print locale
     I.textSplice $ T.pack "test"
 
 index :: AppHandler ()
@@ -87,7 +75,7 @@ routes  = [ ("/", index)
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "templates"
-    locale <- liftIO $ getDefaultLocale
+    --locale <- liftIO $ getDefaultLocale
     i <- nestSnaplet "i18n" i18n $ initI18N (Just "zh_CN")
     addRoutes routes
     return $ App h i

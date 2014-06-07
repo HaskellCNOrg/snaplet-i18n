@@ -93,11 +93,12 @@ initI18N l = makeSnaplet "i18n" description datadir $ do
     let i18nConfig = I18NConfig (fromMaybe defaultLocale l) defaultMessageFilePrefix
     fp <- getSnapletFilePath
     msg <- liftIO $ readMessageFile fp i18nConfig
-    addDefaultSplices
+    modifyHeistState addDefaultSplices
     return $ I18N i18nConfig msg
-  where addDefaultSplices = addSplices [ ("i18n", i18nSplice)
-                                       , ("i18nSpan", i18nSpanSplice)
-                                       ]
+  where addDefaultSplices = I.bindSplices splices
+        splices = do
+                  "i18n" ## i18nSplice
+                  "i18nSpan" ## i18nSpanSplice
         -- config dir for current snaplet
         datadir = Just $ liftM (++ "/resources") getDataDir
         description = "light weight i18n snaplet"
@@ -142,7 +143,7 @@ i18nSplice = do
     value <- lift . lookupI18NValue $ getNameAttr input
     case childElements input of
       [] -> return [X.TextNode value]
-      _  -> I.runChildrenWithText [("i18nValue", value)]
+      _  -> I.runChildrenWithText ("i18nValue" ## value)
 
 -- | Splices. use 'span' html element wrap result.
 --
