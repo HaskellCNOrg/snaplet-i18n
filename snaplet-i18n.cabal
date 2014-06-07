@@ -20,8 +20,8 @@ Cabal-version:       >=1.10
 Extra-source-files:  
   README.md
   example/snap.hs
-  example/snaplets/heist/templates/*.tpl
-  example/snaplets/i18n/*.cfg
+  snaplets/heist/templates/*.tpl
+  snaplets/i18n/*.cfg
 
 Source-Repository head
   Type:     git
