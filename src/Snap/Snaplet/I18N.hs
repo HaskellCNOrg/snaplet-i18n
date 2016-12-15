@@ -5,12 +5,16 @@ module Snap.Snaplet.I18N
   ( I18N
   , HasI18N (..)
   , I18NMessage (..)
+  , Locale
+  , MessageFile
+
   , initI18N
   , getI18NMessages
   , lookupI18NValue
   ) where
 
-import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.State
 import qualified Data.Configurator       as Config
 import qualified Data.Configurator.Types as Config
 import           Data.Maybe
@@ -66,12 +70,12 @@ class HasI18N b where
 -- | Util functions
 --
 getI18N :: HasI18N b => Handler b b I18N
-getI18N = with i18nLens Snap.get
+getI18N = with i18nLens get
 
 -- | Get the @I18NMessage@
 --
 getI18NMessages :: HasI18N b => Handler b b I18NMessage
-getI18NMessages = liftM _getI18NMessage getI18N
+getI18NMessages = fmap _getI18NMessage getI18N
 
 -- | Look up a value in, usuallly Handler Monad
 --
@@ -100,7 +104,7 @@ initI18N l = makeSnaplet "i18n" description datadir $ do
                   "i18n" ## i18nSplice
                   "i18nSpan" ## i18nSpanSplice
         -- config dir for current snaplet
-        datadir = Just $ liftM (++ "/resources") getDataDir
+        datadir = Just $ fmap (++ "/resources") getDataDir
         description = "light weight i18n snaplet"
 
 

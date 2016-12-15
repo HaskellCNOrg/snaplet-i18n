@@ -1,33 +1,16 @@
-SANDBOX=.cabal-sandbox
-DIST=dist
-CBD=cabal
-DEMO=$(SANDBOX)/bin/demo
+CBD=stack
 
-default: clean build rebuild
-
-init:
-	test -e cabal.sandbox.config || cabal sandbox init
-	cabal install --only-dependencies --job=2
+default: rebuild
 
 clean:
 	$(CBD) clean
 
-conf:
-	$(CBD) configure
-
-build: conf
-	$(CBD)  build
-	hlint src/
-	stylish-haskell -i src/Snap/Snaplet/*.hs
+build:
+	hlint src/ example/
+	stylish-haskell -i src/Snap/Snaplet/*.hs example/*.hs
+	$(CBD) build
 
 rebuild: clean build
 
-install: build
-	$(CBD)  install
-
-reinstall: clean install
-	$(CBD)  haddock
-	$(CBD)  sdist
-
-demo: install
-	$(DEMO) -p 8811
+demo: build
+	$(CBD) exec demo -- --port 8811

@@ -1,26 +1,27 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP               #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 
 module Main where
 
 ------------------------------------------------------------------------------
+import           Control.Exception      (SomeException, try)
+import           Control.Lens           hiding (index)
 import           Control.Monad
-import           Control.Exception (SomeException, try)
-import           Data.ByteString (ByteString)
+import           Control.Monad.IO.Class
+import           Data.ByteString        (ByteString)
 import           Data.Maybe
-import           Prelude hiding ((.))
+import qualified Data.Text              as T
+import qualified Heist.Interpreted      as I
+import           Prelude                hiding ((.))
 import           Snap
-import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Config
+import           Snap.Snaplet.Heist
 import           System.IO
-import qualified Data.Text as T
-import qualified Heist.Interpreted as I
-import Control.Lens hiding (value)
 
-import Snap.Snaplet.I18N
+import           Snap.Snaplet.I18N
 
 import           Snap.Loader.Static
 
@@ -28,8 +29,8 @@ import           Snap.Loader.Static
 ------------------------------------------------------------------------------
 
 data App = App
-    { _heist   :: Snaplet (Heist App)
-    , _i18n   :: Snaplet I18N
+    { _heist :: Snaplet (Heist App)
+    , _i18n  :: Snaplet I18N
     }
 
 makeLenses ''App
@@ -52,13 +53,12 @@ decodedParam p = fromMaybe "" <$> getParam p
 
 testSplice :: I.Splice AppHandler
 testSplice = do
-    locale <- liftIO $ getDefaultLocale
+    locale <- liftIO getDefaultLocale
     liftIO $ print locale
     I.textSplice $ T.pack "test"
 
 index :: AppHandler ()
-index = do
-     heistLocal (I.bindSplice "testSplice" testSplice) $ render "index"
+index = heistLocal (I.bindSplice "testSplice" testSplice) $ render "index"
 
 -- | wrap to element span
 --
@@ -75,14 +75,14 @@ routes  = [ ("/", index)
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "templates"
-    --locale <- liftIO $ getDefaultLocale
-    i <- nestSnaplet "i18n" i18n $ initI18N (Just "zh_CN")
+    locale <- liftIO getDefaultLocale
+    i <- nestSnaplet "i18n" i18n $ initI18N locale
     addRoutes routes
     return $ App h i
 
-getDefaultLocale :: IO (Maybe String)
+getDefaultLocale :: IO (Maybe Locale)
 --getDefaultLocale = return $ Just "zh_CN"
-getDefaultLocale = liftM getLocale getConf
+getDefaultLocale = fmap getLocale getConf
 
 ------------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ main = do
                                           'getActions
                                           ["heist/templates"])
 
-    _ <- try $ httpServe conf $ site :: IO (Either SomeException ())
+    _ <- try $ httpServe conf site :: IO (Either SomeException ())
     cleanup
 
 getConf :: IO (Config Snap AppConfig)
