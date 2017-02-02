@@ -16,7 +16,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-3.22
+resolver: lts-7.15
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -47,7 +47,11 @@ packages:
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
-  - snap-loader-static-0.9.0.2
+  - aeson-1.1.0.0
+  - heist-1.0.1.0
+  - map-syntax-0.2.0.1
+  - snap-1.0.0.1
+  - snap-loader-static-1.0.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

@@ -13,6 +13,7 @@ module Snap.Snaplet.I18N
   , lookupI18NValue
   ) where
 
+import           Data.Map.Syntax((##))
 import           Control.Monad.IO.Class
 import           Control.Monad.State
 import qualified Data.Configurator       as Config
