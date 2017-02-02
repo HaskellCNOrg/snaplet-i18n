@@ -17,6 +17,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad.State
 import qualified Data.Configurator       as Config
 import qualified Data.Configurator.Types as Config
+import           Data.Map.Syntax((##))
 import           Data.Maybe
 import qualified Data.Text               as T
 import           Heist
